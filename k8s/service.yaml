@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: filament-inventory-tracker-service
+  labels:
+    app: filament-inventory-tracker
+spec:
+  selector:
+    app: filament-inventory-tracker
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+  type: ClusterIP
