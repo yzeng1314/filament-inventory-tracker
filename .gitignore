@@ -1,0 +1,40 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.*
+
+# Database
+*.sqlite
+*.db
+
+# Build
+/dist
+/build
+
+# Misc
+.idea/
+.vscode/
+coverage/
+
+# Docker
+*.local
+
+# Others
+*.tgz
+
+# Ignore local development files
+*.local.js
+*.local.json
