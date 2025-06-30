@@ -13,7 +13,7 @@ app.use(bodyParser.json());
 app.use(express.static('public'));
 
 // Database setup
-const db = new sqlite3.Database('./filament_inventory.db', (err) => {
+const db = new sqlite3.Database('./data/filament_inventory.db', (err) => {
   if (err) {
     console.error('Error opening database:', err.message);
   } else {
