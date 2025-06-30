@@ -1,0 +1,29 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore npm debug log
+npm-debug.log*
+
+# Ignore local data directory
+data/
+
+# Ignore SQLite database (if not persisted)
+filament_inventory.db
+
+# Ignore build and temp folders
+*.log
+dist/
+build/
+.tmp/
+.temp/
+
+# Ignore OS and editor files
+.DS_Store
+.vscode/
+
+# Ignore all .js temp files (e.g., from editors or tools)
+*.js.tmp
+*.js~
+
+# Ignore public/data if used for uploads
+public/data/
