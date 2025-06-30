@@ -38,3 +38,6 @@ coverage/
 # Ignore local development files
 *.local.js
 *.local.json
+
+# Ignore local database files
+*.db
