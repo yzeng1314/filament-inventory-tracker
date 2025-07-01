@@ -175,7 +175,7 @@ function createFilamentCard(filament) {
                     <span class="detail-value">${filament.weight_remaining}g</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Purchase Date:</span>
+                    <span class="detail-label">Add Date:</span>
                     <span class="detail-value">${purchaseDate}</span>
                 </div>
                 
@@ -1163,41 +1163,53 @@ async function loadCustomManagementData() {
 }
 
 async function deleteCustomBrand(brandName) {
-    if (!confirm(`Are you sure you want to delete the custom brand "${brandName}"?`)) {
+    // Check if any filaments are using this brand
+    const referencingFilaments = filaments.filter(f => f.brand.toLowerCase() === brandName.toLowerCase());
+    
+    if (referencingFilaments.length > 0) {
+        showReferencingFilamentsModal('brand', brandName, referencingFilaments);
         return;
     }
     
-    try {
-        await apiCall(`/custom-brands/${encodeURIComponent(brandName)}`, {
-            method: 'DELETE'
-        });
-        
-        showToast('Custom brand deleted successfully!', 'success');
-        loadCustomManagementData();
-        loadCustomBrandsAndColors(); // Refresh dropdowns
-    } catch (error) {
-        console.error('Failed to delete custom brand:', error);
-        showToast('Failed to delete custom brand', 'error');
-    }
+    showCustomDeleteConfirmModal('brand', brandName, async () => {
+        try {
+            await apiCall(`/custom-brands/${encodeURIComponent(brandName)}`, {
+                method: 'DELETE'
+            });
+            
+            showToast('Custom brand deleted successfully!', 'success');
+            loadCustomManagementData();
+            loadCustomBrandsAndColors(); // Refresh dropdowns
+        } catch (error) {
+            console.error('Failed to delete custom brand:', error);
+            showToast('Failed to delete custom brand', 'error');
+        }
+    });
 }
 
 async function deleteCustomColor(colorName) {
-    if (!confirm(`Are you sure you want to delete the custom color "${colorName}"?`)) {
+    // Check if any filaments are using this color
+    const referencingFilaments = filaments.filter(f => f.color.toLowerCase() === colorName.toLowerCase());
+    
+    if (referencingFilaments.length > 0) {
+        showReferencingFilamentsModal('color', colorName, referencingFilaments);
         return;
     }
     
-    try {
-        await apiCall(`/custom-colors/${encodeURIComponent(colorName)}`, {
-            method: 'DELETE'
-        });
-        
-        showToast('Custom color deleted successfully!', 'success');
-        loadCustomManagementData();
-        loadCustomBrandsAndColors(); // Refresh dropdowns
-    } catch (error) {
-        console.error('Failed to delete custom color:', error);
-        showToast('Failed to delete custom color', 'error');
-    }
+    showCustomDeleteConfirmModal('color', colorName, async () => {
+        try {
+            await apiCall(`/custom-colors/${encodeURIComponent(colorName)}`, {
+                method: 'DELETE'
+            });
+            
+            showToast('Custom color deleted successfully!', 'success');
+            loadCustomManagementData();
+            loadCustomBrandsAndColors(); // Refresh dropdowns
+        } catch (error) {
+            console.error('Failed to delete custom color:', error);
+            showToast('Failed to delete custom color', 'error');
+        }
+    });
 }
 
 async function addCustomBrand() {
@@ -1284,22 +1296,28 @@ async function addCustomType() {
 }
 
 async function deleteCustomType(typeName) {
-    if (!confirm(`Are you sure you want to delete the custom type "${typeName}"?`)) {
+    // Check if any filaments are using this type
+    const referencingFilaments = filaments.filter(f => f.type.toLowerCase() === typeName.toLowerCase());
+    
+    if (referencingFilaments.length > 0) {
+        showReferencingFilamentsModal('type', typeName, referencingFilaments);
         return;
     }
     
-    try {
-        await apiCall(`/custom-types/${encodeURIComponent(typeName)}`, {
-            method: 'DELETE'
-        });
-        
-        showToast('Custom type deleted successfully!', 'success');
-        loadCustomManagementData();
-        loadCustomBrandsAndColors(); // Refresh dropdowns
-    } catch (error) {
-        console.error('Failed to delete custom type:', error);
-        showToast('Failed to delete custom type', 'error');
-    }
+    showCustomDeleteConfirmModal('type', typeName, async () => {
+        try {
+            await apiCall(`/custom-types/${encodeURIComponent(typeName)}`, {
+                method: 'DELETE'
+            });
+            
+            showToast('Custom type deleted successfully!', 'success');
+            loadCustomManagementData();
+            loadCustomBrandsAndColors(); // Refresh dropdowns
+        } catch (error) {
+            console.error('Failed to delete custom type:', error);
+            showToast('Failed to delete custom type', 'error');
+        }
+    });
 }
 
 // Show edit brand modal
@@ -1456,6 +1474,172 @@ async function saveEditedItem(itemType, originalName) {
     }
 }
 
+// Show referencing filaments modal
+function showReferencingFilamentsModal(itemType, itemName, referencingFilaments) {
+    const modalHTML = `
+        <div class="modal" id="referencingFilamentsModal">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Cannot Delete Custom ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}</h2>
+                    <button class="close-btn" onclick="closeReferencingFilamentsModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p style="margin-bottom: 15px; color: #dc3545; font-weight: 600;">
+                        Cannot delete "${itemName}" because it is currently being used by ${referencingFilaments.length} filament${referencingFilaments.length > 1 ? 's' : ''}:
+                    </p>
+                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
+                        ${referencingFilaments.map(filament => {
+                            const colorStyle = getColorStyleSync(filament.color);
+                            return `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px; background: white;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span class="color-indicator" style="${colorStyle}"></span>
+                                        <div>
+                                            <strong>${escapeHtml(filament.brand)} - ${escapeHtml(filament.type)}</strong><br>
+                                            <small style="color: #666;">Color: ${escapeHtml(filament.color)} | Weight: ${filament.weight_remaining}g</small>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-small" onclick="editFilament(${filament.id}); closeReferencingFilamentsModal();" title="Edit this filament">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <p style="margin-top: 15px; color: #666; font-style: italic;">
+                        To delete this custom ${itemType}, you must first remove or change the ${itemType} for all filaments listed above.
+                    </p>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" onclick="closeReferencingFilamentsModal()">
+                        <i class="fas fa-check"></i> Understood
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('referencingFilamentsModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    document.getElementById('referencingFilamentsModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close referencing filaments modal
+function closeReferencingFilamentsModal() {
+    const modal = document.getElementById('referencingFilamentsModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        setTimeout(() => modal.remove(), 300);
+    }
+}
+
+// Global variable to store the delete callback
+let pendingDeleteCallback = null;
+
+// Show custom delete confirmation modal
+function showCustomDeleteConfirmModal(itemType, itemName, onConfirm) {
+    const modalHTML = `
+        <div class="modal" id="customDeleteConfirmModal">
+            <div class="modal-content" style="max-width: 450px;">
+                <div class="modal-header">
+                    <h2><i class="fas fa-exclamation-triangle" style="color: #dc3545;"></i> Confirm Deletion</h2>
+                    <button class="close-btn" onclick="closeCustomDeleteConfirmModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: center; padding: 20px 0;">
+                        <div style="font-size: 3rem; color: #dc3545; margin-bottom: 15px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </div>
+                        <h3 style="margin-bottom: 15px; color: #333;">Delete Custom ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}?</h3>
+                        <p style="margin-bottom: 20px; color: #666; font-size: 1.1rem;">
+                            Are you sure you want to permanently delete the custom ${itemType}:
+                        </p>
+                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                            <strong style="color: #333; font-size: 1.1rem;">"${escapeHtml(itemName)}"</strong>
+                        </div>
+                        <p style="color: #dc3545; font-weight: 600; margin-bottom: 0;">
+                            <i class="fas fa-exclamation-circle"></i> This action cannot be undone!
+                        </p>
+                    </div>
+                </div>
+                <div class="form-actions" style="display: flex; gap: 10px; justify-content: center; padding: 20px; border-top: 1px solid #eee;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCustomDeleteConfirmModal()" style="min-width: 120px;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="confirmCustomDelete()" style="min-width: 120px;">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('customDeleteConfirmModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Store the confirmation callback in both places for reliability
+    pendingDeleteCallback = onConfirm;
+    window.customDeleteCallback = onConfirm;
+    console.log('Stored delete callback:', typeof onConfirm, 'pendingDeleteCallback:', typeof pendingDeleteCallback); // Debug log
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Show modal
+    document.getElementById('customDeleteConfirmModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// Close custom delete confirmation modal
+function closeCustomDeleteConfirmModal() {
+    const modal = document.getElementById('customDeleteConfirmModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        setTimeout(() => modal.remove(), 300);
+    }
+    // Clear the callback
+    window.customDeleteCallback = null;
+}
+
+// Confirm custom delete
+async function confirmCustomDelete() {
+    console.log('confirmCustomDelete called, window callback type:', typeof window.customDeleteCallback, 'pending callback type:', typeof pendingDeleteCallback);
+    
+    // Try window callback first, then fallback to pendingDeleteCallback
+    const callback = window.customDeleteCallback || pendingDeleteCallback;
+    
+    if (callback && typeof callback === 'function') {
+        try {
+            closeCustomDeleteConfirmModal();
+            await callback();
+        } catch (error) {
+            console.error('Error during custom delete:', error);
+            showToast('Failed to delete item', 'error');
+        }
+    } else {
+        console.error('No valid delete callback found, window type:', typeof window.customDeleteCallback, 'pending type:', typeof pendingDeleteCallback);
+        showToast('Delete operation failed - no callback', 'error');
+    }
+}
+
 // Export functions for global access
 window.showAddModal = showAddModal;
 window.closeModal = closeModal;
@@ -1477,3 +1661,8 @@ window.addCustomColor = addCustomColor;
 window.deleteCustomBrand = deleteCustomBrand;
 window.deleteCustomType = deleteCustomType;
 window.deleteCustomColor = deleteCustomColor;
+window.showReferencingFilamentsModal = showReferencingFilamentsModal;
+window.closeReferencingFilamentsModal = closeReferencingFilamentsModal;
+window.showCustomDeleteConfirmModal = showCustomDeleteConfirmModal;
+window.closeCustomDeleteConfirmModal = closeCustomDeleteConfirmModal;
+window.confirmCustomDelete = confirmCustomDelete;
