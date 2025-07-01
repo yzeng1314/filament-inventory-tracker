@@ -34,11 +34,14 @@ const totalBrands = document.getElementById('totalBrands');
 const totalWeight = document.getElementById('totalWeight');
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
-    loadFilaments();
+document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     initializeColorOptions();
     setDefaultValues();
+    
+    // Load custom colors first, then load filaments to ensure color indicators work properly
+    await loadCustomBrandsAndColors();
+    loadFilaments();
 });
 
 // Event listeners
