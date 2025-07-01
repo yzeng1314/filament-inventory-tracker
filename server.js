@@ -56,6 +56,14 @@ function initializeDatabase() {
     )
   `;
   
+  const createCustomTypesQuery = `
+    CREATE TABLE IF NOT EXISTS custom_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `;
+  
   db.run(createTableQuery, (err) => {
     if (err) {
       console.error('Error creating filaments table:', err.message);
@@ -77,6 +85,14 @@ function initializeDatabase() {
       console.error('Error creating custom_colors table:', err.message);
     } else {
       console.log('Custom colors table ready');
+    }
+  });
+  
+  db.run(createCustomTypesQuery, (err) => {
+    if (err) {
+      console.error('Error creating custom_types table:', err.message);
+    } else {
+      console.log('Custom types table ready');
     }
   });
 }
@@ -295,6 +311,53 @@ app.delete('/api/custom-colors/:name', (req, res) => {
       return;
     }
     res.json({ message: 'Custom color deleted successfully' });
+  });
+});
+
+// Custom types endpoints
+app.get('/api/custom-types', (req, res) => {
+  db.all('SELECT * FROM custom_types ORDER BY name', [], (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json(rows);
+  });
+});
+
+app.post('/api/custom-types', (req, res) => {
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: 'Type name is required' });
+  }
+  
+  db.run('INSERT INTO custom_types (name) VALUES (?)', [name], function(err) {
+    if (err) {
+      if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+        res.status(409).json({ error: 'Type already exists' });
+      } else {
+        res.status(500).json({ error: err.message });
+      }
+      return;
+    }
+    res.json({ id: this.lastID, name, message: 'Custom type added successfully' });
+  });
+});
+
+// Delete custom type
+app.delete('/api/custom-types/:name', (req, res) => {
+  const { name } = req.params;
+  
+  db.run('DELETE FROM custom_types WHERE name = ?', [decodeURIComponent(name)], function(err) {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    if (this.changes === 0) {
+      res.status(404).json({ error: 'Custom type not found' });
+      return;
+    }
+    res.json({ message: 'Custom type deleted successfully' });
   });
 });
 

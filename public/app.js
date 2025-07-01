@@ -3,6 +3,7 @@ let filaments = [];
 let currentEditId = null;
 let deleteFilamentId = null;
 let customColorsCache = [];
+let customTypesCache = [];
 
 // DOM elements
 const filamentGrid = document.getElementById('filamentGrid');
@@ -283,10 +284,46 @@ async function editFilament(id) {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    // Handle custom color
+    let colorValue = document.getElementById('color').value.trim();
+    if (!colorValue) {
+        const customColorName = document.getElementById('customColorName');
+        const colorPicker = document.getElementById('colorPicker');
+        
+        if (customColorName && customColorName.value.trim()) {
+            const customColorNameValue = customColorName.value.trim();
+            const hexColor = colorPicker ? colorPicker.value : '#ff0000';
+            
+            // Add custom color to database
+            try {
+                await apiCall('/custom-colors', {
+                    method: 'POST',
+                    body: JSON.stringify({ 
+                        name: customColorNameValue,
+                        hex_code: hexColor 
+                    })
+                });
+                // Update dropdowns to include the new color
+                await loadCustomBrandsAndColors();
+            } catch (error) {
+                // If it already exists, that's fine
+                if (!error.message.includes('already exists')) {
+                    console.error('Failed to add custom color:', error);
+                    return;
+                }
+            }
+            
+            colorValue = customColorNameValue;
+        } else {
+            showToast('Please select a color', 'error');
+            return;
+        }
+    }
+    
     const formData = {
         brand: document.getElementById('brand').value.trim(),
         type: document.getElementById('type').value,
-        color: document.getElementById('color').value.trim(),
+        color: colorValue,
         spool_type: document.getElementById('spoolType').value,
         weight_remaining: parseFloat(document.getElementById('weightRemaining').value) || 1000,
         purchase_date: document.getElementById('purchaseDate').value || null,
@@ -525,19 +562,22 @@ function initializeCustomColorDropdown() {
     });
 }
 
-// Load custom brands and colors from database
+// Load custom brands, colors, and types from database
 async function loadCustomBrandsAndColors() {
     try {
-        const [customBrands, customColors] = await Promise.all([
+        const [customBrands, customColors, customTypes] = await Promise.all([
             apiCall('/custom-brands'),
-            apiCall('/custom-colors')
+            apiCall('/custom-colors'),
+            apiCall('/custom-types')
         ]);
         
-        // Cache custom colors for synchronous access
+        // Cache custom colors and types for synchronous access
         customColorsCache = customColors;
+        customTypesCache = customTypes;
         
         updateBrandDropdown(customBrands);
         updateColorDropdown(customColors);
+        updateTypeDropdown(customTypes);
     } catch (error) {
         console.error('Failed to load custom options:', error);
     }
@@ -585,6 +625,25 @@ function updateColorDropdown(customColors) {
             </button>
         `;
         colorOptions.insertBefore(option, customOption);
+    });
+}
+
+// Update type dropdown with custom types
+function updateTypeDropdown(customTypes) {
+    const typeSelect = document.getElementById('type');
+    const customOption = typeSelect.querySelector('option[value="custom"]');
+    
+    // Remove existing custom type options
+    const existingCustom = typeSelect.querySelectorAll('.custom-type-option');
+    existingCustom.forEach(option => option.remove());
+    
+    // Add custom types before the "Add Custom" option
+    customTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type.name;
+        option.textContent = `★ ${type.name}`;
+        option.className = 'custom-type-option custom-option';
+        typeSelect.insertBefore(option, customOption);
     });
 }
 
@@ -674,6 +733,8 @@ function resetForm() {
     const customColorName = document.getElementById('customColorName');
     const colorPicker = document.getElementById('colorPicker');
     const colorHex = document.getElementById('colorHex');
+    const customTypeContainer = document.getElementById('customType');
+    const customTypeName = document.getElementById('customTypeName');
     
     if (customBrand) {
         customBrand.style.display = 'none';
@@ -696,6 +757,15 @@ function resetForm() {
     
     if (colorHex) {
         colorHex.value = '';
+    }
+    
+    if (customTypeContainer) {
+        customTypeContainer.style.display = 'none';
+    }
+    
+    if (customTypeName) {
+        customTypeName.required = false;
+        customTypeName.value = '';
     }
     
     // Reset color dropdown to default state
@@ -923,13 +993,13 @@ function showManageCustomsModal() {
         <div class="modal" id="manageCustomsModal">
             <div class="modal-content" style="max-width: 800px;">
                 <div class="modal-header">
-                    <h2>Manage Custom Brands & Colors</h2>
+                    <h2>Manage Custom Brands, Colors & Types</h2>
                     <button class="close-btn" onclick="closeManageCustomsModal()">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div style="display: flex; gap: 20px;">
+                    <div style="display: flex; gap: 15px;">
                         <div style="flex: 1;">
                             <h3>Custom Brands</h3>
                             <div class="form-group">
@@ -939,6 +1009,16 @@ function showManageCustomsModal() {
                                 </button>
                             </div>
                             <div id="customBrandsList"></div>
+                        </div>
+                        <div style="flex: 1;">
+                            <h3>Custom Types</h3>
+                            <div class="form-group">
+                                <input type="text" id="newTypeName" placeholder="Enter type name" style="width: 100%; margin-bottom: 10px;">
+                                <button type="button" class="btn btn-primary btn-small" onclick="addCustomType()">
+                                    <i class="fas fa-plus"></i> Add Type
+                                </button>
+                            </div>
+                            <div id="customTypesList"></div>
                         </div>
                         <div style="flex: 1;">
                             <h3>Custom Colors</h3>
@@ -998,8 +1078,9 @@ function closeManageCustomsModal() {
 
 async function loadCustomManagementData() {
     try {
-        const [customBrands, customColors] = await Promise.all([
+        const [customBrands, customTypes, customColors] = await Promise.all([
             apiCall('/custom-brands'),
+            apiCall('/custom-types'),
             apiCall('/custom-colors')
         ]);
         
@@ -1013,6 +1094,17 @@ async function loadCustomManagementData() {
                 </button>
             </div>
         `).join('') || '<p style="color: #666; font-style: italic;">No custom brands</p>';
+        
+        // Render custom types
+        const typesList = document.getElementById('customTypesList');
+        typesList.innerHTML = customTypes.map(type => `
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
+                <span>★ ${escapeHtml(type.name)}</span>
+                <button class="btn btn-danger btn-small" onclick="deleteCustomType('${type.name}')" title="Delete Type">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `).join('') || '<p style="color: #666; font-style: italic;">No custom types</p>';
         
         // Render custom colors
         const colorsList = document.getElementById('customColorsList');
@@ -1130,6 +1222,49 @@ async function addCustomColor() {
     }
 }
 
+async function addCustomType() {
+    const typeName = document.getElementById('newTypeName').value.trim();
+    
+    if (!typeName) {
+        showToast('Please enter a type name', 'error');
+        return;
+    }
+    
+    try {
+        await apiCall('/custom-types', {
+            method: 'POST',
+            body: JSON.stringify({ name: typeName })
+        });
+        
+        showToast('Custom type added successfully!', 'success');
+        document.getElementById('newTypeName').value = '';
+        loadCustomManagementData();
+        loadCustomBrandsAndColors(); // Refresh dropdowns
+    } catch (error) {
+        console.error('Failed to add custom type:', error);
+        showToast('Failed to add custom type', 'error');
+    }
+}
+
+async function deleteCustomType(typeName) {
+    if (!confirm(`Are you sure you want to delete the custom type "${typeName}"?`)) {
+        return;
+    }
+    
+    try {
+        await apiCall(`/custom-types/${encodeURIComponent(typeName)}`, {
+            method: 'DELETE'
+        });
+        
+        showToast('Custom type deleted successfully!', 'success');
+        loadCustomManagementData();
+        loadCustomBrandsAndColors(); // Refresh dropdowns
+    } catch (error) {
+        console.error('Failed to delete custom type:', error);
+        showToast('Failed to delete custom type', 'error');
+    }
+}
+
 // Export functions for global access
 window.showAddModal = showAddModal;
 window.closeModal = closeModal;
@@ -1140,6 +1275,8 @@ window.editCustomColor = editCustomColor;
 window.showManageCustomsModal = showManageCustomsModal;
 window.closeManageCustomsModal = closeManageCustomsModal;
 window.addCustomBrand = addCustomBrand;
+window.addCustomType = addCustomType;
 window.addCustomColor = addCustomColor;
 window.deleteCustomBrand = deleteCustomBrand;
+window.deleteCustomType = deleteCustomType;
 window.deleteCustomColor = deleteCustomColor;
