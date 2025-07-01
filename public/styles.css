@@ -310,7 +310,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 25px 30px 15px 30px;
+    padding: 25px 30px 20px 30px;
     margin-bottom: 0;
     border-bottom: 1px solid #eee;
 }
@@ -339,7 +339,7 @@ body {
 }
 
 .modal-body {
-    padding: 25px 30px;
+    padding: 30px;
     overflow-y: auto;
     flex: 1;
 }
@@ -347,6 +347,11 @@ body {
 .modal-body form {
     padding: 0;
     margin: 0;
+}
+
+#filamentForm {
+    padding: 30px;
+    padding-bottom: 0;
 }
 
 /* Forms */
@@ -627,7 +632,8 @@ select::-ms-expand {
     justify-content: flex-end;
     padding: 20px 30px 25px 30px;
     border-top: 1px solid #eee;
-    margin: 20px -30px -25px -30px;
+    margin: 0;
+    margin-top: 20px;
     background: #f8f9fa;
     border-radius: 0 0 12px 12px;
 }
