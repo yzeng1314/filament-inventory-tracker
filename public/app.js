@@ -4,6 +4,17 @@ let currentEditId = null;
 let deleteFilamentId = null;
 let customColorsCache = [];
 let customTypesCache = [];
+let currentFilters = {
+    brands: [],
+    types: [],
+    colors: [],
+    spoolTypes: [],
+    dateFrom: null,
+    dateTo: null,
+    weightMin: null,
+    weightMax: null
+};
+let isFiltersActive = false;
 
 // DOM elements
 const filamentGrid = document.getElementById('filamentGrid');
@@ -41,10 +52,15 @@ function setupEventListeners() {
     });
     searchInput.addEventListener('input', (e) => {
         if (e.target.value === '') {
-            loadFilaments();
+            applyFiltersAndSearch();
         }
     });
     filamentForm.addEventListener('submit', handleFormSubmit);
+    
+    // Filter event listeners
+    document.getElementById('filterBtn').addEventListener('click', toggleFiltersPanel);
+    document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
+    document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
     
     // Modal close on backdrop click
     filamentModal.addEventListener('click', (e) => {
@@ -1640,6 +1656,200 @@ async function confirmCustomDelete() {
     }
 }
 
+// Filter functionality
+function toggleFiltersPanel() {
+    const filtersPanel = document.getElementById('filtersPanel');
+    const filterBtn = document.getElementById('filterBtn');
+    
+    if (filtersPanel.style.display === 'none' || !filtersPanel.style.display) {
+        filtersPanel.style.display = 'block';
+        filterBtn.classList.add('filter-active');
+        populateFilterOptions();
+    } else {
+        filtersPanel.style.display = 'none';
+        filterBtn.classList.remove('filter-active');
+    }
+}
+
+function populateFilterOptions() {
+    // Get unique values from current filaments
+    const brands = [...new Set(filaments.map(f => f.brand))].sort();
+    const types = [...new Set(filaments.map(f => f.type))].sort();
+    const colors = [...new Set(filaments.map(f => f.color))].sort();
+    
+    // Populate brand filter
+    const brandFilter = document.getElementById('filterBrand');
+    brandFilter.innerHTML = '<option value="">All Brands</option>' + 
+        brands.map(brand => `<option value="${escapeHtml(brand)}">${escapeHtml(brand)}</option>`).join('');
+    
+    // Populate type filter
+    const typeFilter = document.getElementById('filterType');
+    typeFilter.innerHTML = '<option value="">All Types</option>' + 
+        types.map(type => `<option value="${escapeHtml(type)}">${escapeHtml(type)}</option>`).join('');
+    
+    // Populate color filter
+    const colorFilter = document.getElementById('filterColor');
+    colorFilter.innerHTML = '<option value="">All Colors</option>' + 
+        colors.map(color => `<option value="${escapeHtml(color)}">${escapeHtml(color)}</option>`).join('');
+}
+
+function applyFilters() {
+    // Get filter values
+    const brandFilter = document.getElementById('filterBrand');
+    const typeFilter = document.getElementById('filterType');
+    const colorFilter = document.getElementById('filterColor');
+    const spoolTypeFilter = document.getElementById('filterSpoolType');
+    const dateFromFilter = document.getElementById('filterDateFrom');
+    const dateToFilter = document.getElementById('filterDateTo');
+    const weightMinFilter = document.getElementById('filterWeightMin');
+    const weightMaxFilter = document.getElementById('filterWeightMax');
+    
+    // Update current filters
+    currentFilters.brands = Array.from(brandFilter.selectedOptions).map(option => option.value).filter(v => v);
+    currentFilters.types = Array.from(typeFilter.selectedOptions).map(option => option.value).filter(v => v);
+    currentFilters.colors = Array.from(colorFilter.selectedOptions).map(option => option.value).filter(v => v);
+    currentFilters.spoolTypes = Array.from(spoolTypeFilter.selectedOptions).map(option => option.value).filter(v => v);
+    currentFilters.dateFrom = dateFromFilter.value || null;
+    currentFilters.dateTo = dateToFilter.value || null;
+    currentFilters.weightMin = weightMinFilter.value ? parseInt(weightMinFilter.value) : null;
+    currentFilters.weightMax = weightMaxFilter.value ? parseInt(weightMaxFilter.value) : null;
+    
+    // Check if any filters are active
+    isFiltersActive = currentFilters.brands.length > 0 || 
+                     currentFilters.types.length > 0 || 
+                     currentFilters.colors.length > 0 || 
+                     currentFilters.spoolTypes.length > 0 || 
+                     currentFilters.dateFrom || 
+                     currentFilters.dateTo || 
+                     currentFilters.weightMin !== null || 
+                     currentFilters.weightMax !== null;
+    
+    // Update filter button appearance
+    const filterBtn = document.getElementById('filterBtn');
+    if (isFiltersActive) {
+        filterBtn.classList.add('filters-indicator');
+    } else {
+        filterBtn.classList.remove('filters-indicator');
+    }
+    
+    // Apply filters and search
+    applyFiltersAndSearch();
+    
+    showToast('Filters applied successfully!', 'success');
+}
+
+function clearFilters() {
+    // Reset filter values
+    document.getElementById('filterBrand').selectedIndex = 0;
+    document.getElementById('filterType').selectedIndex = 0;
+    document.getElementById('filterColor').selectedIndex = 0;
+    document.getElementById('filterSpoolType').selectedIndex = 0;
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+    document.getElementById('filterWeightMin').value = '';
+    document.getElementById('filterWeightMax').value = '';
+    
+    // Reset current filters
+    currentFilters = {
+        brands: [],
+        types: [],
+        colors: [],
+        spoolTypes: [],
+        dateFrom: null,
+        dateTo: null,
+        weightMin: null,
+        weightMax: null
+    };
+    
+    isFiltersActive = false;
+    
+    // Update filter button appearance
+    const filterBtn = document.getElementById('filterBtn');
+    filterBtn.classList.remove('filters-indicator');
+    
+    // Apply filters (which will show all filaments)
+    applyFiltersAndSearch();
+    
+    showToast('Filters cleared!', 'success');
+}
+
+function applyFiltersAndSearch() {
+    let filteredFilaments = [...filaments];
+    const searchQuery = searchInput.value.trim().toLowerCase();
+    
+    // Apply search filter first
+    if (searchQuery) {
+        filteredFilaments = filteredFilaments.filter(filament => 
+            filament.brand.toLowerCase().includes(searchQuery) ||
+            filament.type.toLowerCase().includes(searchQuery) ||
+            filament.color.toLowerCase().includes(searchQuery) ||
+            (filament.notes && filament.notes.toLowerCase().includes(searchQuery))
+        );
+    }
+    
+    // Apply advanced filters
+    if (isFiltersActive) {
+        filteredFilaments = filteredFilaments.filter(filament => {
+            // Brand filter
+            if (currentFilters.brands.length > 0 && !currentFilters.brands.includes(filament.brand)) {
+                return false;
+            }
+            
+            // Type filter
+            if (currentFilters.types.length > 0 && !currentFilters.types.includes(filament.type)) {
+                return false;
+            }
+            
+            // Color filter
+            if (currentFilters.colors.length > 0 && !currentFilters.colors.includes(filament.color)) {
+                return false;
+            }
+            
+            // Spool type filter
+            if (currentFilters.spoolTypes.length > 0 && !currentFilters.spoolTypes.includes(filament.spool_type)) {
+                return false;
+            }
+            
+            // Date range filter
+            if (currentFilters.dateFrom || currentFilters.dateTo) {
+                const filamentDate = filament.purchase_date ? new Date(filament.purchase_date) : null;
+                
+                if (currentFilters.dateFrom) {
+                    const fromDate = new Date(currentFilters.dateFrom);
+                    if (!filamentDate || filamentDate < fromDate) {
+                        return false;
+                    }
+                }
+                
+                if (currentFilters.dateTo) {
+                    const toDate = new Date(currentFilters.dateTo);
+                    if (!filamentDate || filamentDate > toDate) {
+                        return false;
+                    }
+                }
+            }
+            
+            // Weight range filter
+            if (currentFilters.weightMin !== null || currentFilters.weightMax !== null) {
+                const weight = filament.weight_remaining || 0;
+                
+                if (currentFilters.weightMin !== null && weight < currentFilters.weightMin) {
+                    return false;
+                }
+                
+                if (currentFilters.weightMax !== null && weight > currentFilters.weightMax) {
+                    return false;
+                }
+            }
+            
+            return true;
+        });
+    }
+    
+    renderFilaments(filteredFilaments);
+    updateStats(filteredFilaments);
+}
+
 // Export functions for global access
 window.showAddModal = showAddModal;
 window.closeModal = closeModal;
@@ -1666,3 +1876,6 @@ window.closeReferencingFilamentsModal = closeReferencingFilamentsModal;
 window.showCustomDeleteConfirmModal = showCustomDeleteConfirmModal;
 window.closeCustomDeleteConfirmModal = closeCustomDeleteConfirmModal;
 window.confirmCustomDelete = confirmCustomDelete;
+window.toggleFiltersPanel = toggleFiltersPanel;
+window.applyFilters = applyFilters;
+window.clearFilters = clearFilters;
