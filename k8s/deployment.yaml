@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: filament-inventory-tracker
-        image: filament-inventory-tracker:latest
+        image: docker.io/whzy1990/filament-inventory-tracker:latest
         ports:
         - containerPort: 3000
         env:

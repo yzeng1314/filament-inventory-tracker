@@ -4,7 +4,7 @@ metadata:
   name: filament-inventory-tracker-pvc
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 200Mi
