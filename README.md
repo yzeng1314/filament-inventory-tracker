@@ -1,149 +1,100 @@
-# Filament Inventory Tracker - 3D Printing Inventory Management
+# Filament Inventory Tracker
 
-A modern, mobile-friendly web application for tracking your 3D printing filament inventory. Built with Node.js, Express, SQLite, and vanilla JavaScript.
+A modern web application for tracking 3D printing filament inventory with support for custom brands, types, and colors.
 
 ## Features
 
-- **Comprehensive Filament Tracking**: Track brand, type, color, spool type (refill/with spool), weight remaining, purchase date, and notes
-- **Modern UI**: Clean, intuitive interface with responsive design
-- **Quick Search**: Search across all filament properties
-- **Inventory Statistics**: View total filaments, brands, and remaining weight
-- **Mobile Friendly**: Optimized for mobile devices and tablets
-- **Persistent Storage**: SQLite database ensures data persistence
-- **Kubernetes Ready**: Easy deployment as a pod in Kubernetes clusters
+- **Inventory Management**: Track filament brand, type, color, spool type, weight, and purchase date
+- **Custom Data**: Add custom brands, types, and colors through a centralized management interface
+- **Search & Filter**: Quick search across all filament properties
+- **Mobile Friendly**: Responsive design that works on all devices
+- **Data Persistence**: SQLite database ensures data survives restarts
+- **Kubernetes Ready**: Includes K8s deployment manifests
+- **Multi-Architecture**: Docker images for Linux (amd64, arm64)
 
 ## Quick Start
 
 ### Local Development
 
-1. **Install Dependencies**
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd filament-inventory-tracker
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Start the Application**
+3. **Start the application**
    ```bash
    npm start
    ```
 
-3. **Access the Application**
-   Open your browser and navigate to `http://localhost:3000`
+4. **Open your browser**
+   Navigate to `http://localhost:3000`
 
-### Development Mode
-
-For development with auto-reload:
-```bash
-npm run dev
-```
-
-## Docker Deployment
-
-### Build the Docker Image
-
-```bash
-docker build -t filament-inventory-tracker:latest .
-```
-
-### Run with Docker
+### Docker
 
 ```bash
 docker run -d \
-  --name filament-inventory-tracker \
+  --name filament-tracker \
   -p 3000:3000 \
   -v filament-data:/app/data \
-  filament-inventory-tracker:latest
+  ghcr.io/yourusername/filament-inventory-tracker:latest
 ```
 
-## Kubernetes Deployment
+### Kubernetes Deployment
 
-### Prerequisites
-
-- Kubernetes cluster
-- kubectl configured
-- Docker image built and available in your registry
-
-### Deploy to Kubernetes
-
-1. **Create the Persistent Volume Claim**
+1. **Apply the manifests**
    ```bash
-   kubectl apply -f k8s/pvc.yaml
+   kubectl apply -f k8s/
    ```
 
-2. **Deploy the Application**
+2. **Access the application**
    ```bash
-   kubectl apply -f k8s/deployment.yaml
+   kubectl port-forward service/filament-tracker 3000:3000
    ```
 
-3. **Create the Service**
-   ```bash
-   kubectl apply -f k8s/service.yaml
-   ```
+## Multi-Architecture Docker Images
 
-4. **Verify Deployment**
-   ```bash
-   kubectl get pods -l app=filament-inventory-tracker
-   kubectl get svc filament-inventory-tracker-service
-   ```
+This project automatically builds Docker images for multiple architectures using GitHub Actions:
 
-### Access the Application in Kubernetes
+### Supported Platforms
 
-#### Port Forward (for testing)
+- **Linux AMD64** (`linux/amd64`) - Standard x86_64 systems
+- **Linux ARM64** (`linux/arm64`) - ARM64 systems (Apple Silicon, AWS Graviton, etc.)
+
+### GitHub Workflow
+
+The `.github/workflows/docker-build.yml` workflow automatically:
+
+1. **Triggers on**:
+   - Push to `main` branch
+   - New tags (e.g., `v1.0.0`)
+   - Pull requests (build only, no push)
+
+2. **Builds multi-arch images** using Docker Buildx with QEMU emulation
+
+3. **Publishes to GitHub Container Registry** (`ghcr.io`)
+
+4. **Tags images** with:
+   - `latest` (for main branch)
+   - Version tags (for releases)
+   - Branch names (for feature branches)
+
+### Available Images
+
 ```bash
-kubectl port-forward svc/filament-inventory-tracker-service 3000:80
-```
-Then access at `http://localhost:3000`
+# Latest Linux multi-arch
+ghcr.io/yourusername/filament-inventory-tracker:latest
 
-#### Ingress (for production)
-Create an ingress resource to expose the service:
+# Specific version
+ghcr.io/yourusername/filament-inventory-tracker:v1.0.0
 
-```yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: filament-inventory-tracker-ingress
-spec:
-  rules:
-  - host: filament-inventory-tracker.yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: filament-inventory-tracker-service
-            port:
-              number: 80
-```
-
-## API Endpoints
-
-The application provides a REST API for programmatic access:
-
-- `GET /api/filaments` - Get all filaments
-- `GET /api/filaments/search?q=query` - Search filaments
-- `GET /api/filaments/:id` - Get specific filament
-- `POST /api/filaments` - Add new filament
-- `PUT /api/filaments/:id` - Update filament
-- `DELETE /api/filaments/:id` - Delete filament
-- `GET /health` - Health check endpoint
-
-## Data Schema
-
-Each filament record contains:
-
-```json
-{
-  "id": 1,
-  "brand": "Hatchbox",
-  "type": "PLA",
-  "color": "Red",
-  "spool_type": "with_spool",
-  "weight_remaining": 850,
-  "purchase_date": "2024-01-15",
-  "notes": "Great quality, prints well at 200°C",
-  "created_at": "2024-01-15T10:30:00Z",
-  "updated_at": "2024-01-15T10:30:00Z"
-}
+# Platform-specific (automatically selected)
+docker pull --platform linux/arm64 ghcr.io/yourusername/filament-inventory-tracker:latest
 ```
 
 ## Configuration
@@ -153,72 +104,58 @@ Each filament record contains:
 - `PORT` - Server port (default: 3000)
 - `NODE_ENV` - Environment (development/production)
 
-### Database
+### Data Storage
 
-The application uses SQLite for data storage. The database file is created automatically at `./filament_inventory.db` (or `/app/data/filament_inventory.db` in Docker).
+- **Development**: SQLite database in `./data/filament_inventory.db`
+- **Docker**: Mounted volume at `/app/data`
+- **Kubernetes**: Persistent volume claim
 
-## Keyboard Shortcuts
+## API Endpoints
 
-- `Ctrl/Cmd + K` - Focus search input
-- `Ctrl/Cmd + N` - Add new filament
-- `Escape` - Close modals
+### Filaments
+- `GET /api/filaments` - List all filaments
+- `GET /api/filaments/search?q=query` - Search filaments
+- `GET /api/filaments/:id` - Get single filament
+- `POST /api/filaments` - Add new filament
+- `PUT /api/filaments/:id` - Update filament
+- `DELETE /api/filaments/:id` - Delete filament
 
-## Browser Support
+### Custom Data
+- `GET /api/custom-brands` - List custom brands
+- `POST /api/custom-brands` - Add custom brand
+- `DELETE /api/custom-brands/:name` - Delete custom brand
+- `GET /api/custom-types` - List custom types
+- `POST /api/custom-types` - Add custom type
+- `DELETE /api/custom-types/:name` - Delete custom type
+- `GET /api/custom-colors` - List custom colors
+- `POST /api/custom-colors` - Add custom color
+- `DELETE /api/custom-colors/:name` - Delete custom color
 
-- Chrome/Chromium 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
+### Health Check
+- `GET /health` - Health status for monitoring
 
-## Mobile Support
+## Development
 
-The application is fully responsive and optimized for:
-- iOS Safari
-- Android Chrome
-- Mobile browsers with viewport support
+### Project Structure
+```
+├── public/           # Frontend files
+│   ├── index.html   # Main HTML
+│   ├── app.js       # Frontend JavaScript
+│   └── styles.css   # Styling
+├── k8s/             # Kubernetes manifests
+├── .github/         # GitHub workflows
+├── server.js        # Backend server
+├── Dockerfile       # Container image
+└── package.json     # Dependencies
+```
 
-## Production Considerations
+### Building Images Locally
 
-### Security
-- The application runs as a non-root user in Docker
-- Input validation and sanitization
-- CORS protection
-
-### Performance
-- Efficient SQLite queries with indexes
-- Lightweight frontend with minimal dependencies
-- Gzip compression for static assets
-
-### Monitoring
-- Health check endpoint at `/health`
-- Kubernetes liveness and readiness probes
-- Application logs for debugging
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Permission Errors**
-   - Ensure the data directory is writable
-   - Check file permissions in Docker/Kubernetes
-
-2. **Port Already in Use**
-   - Change the PORT environment variable
-   - Kill existing processes using the port
-
-3. **Kubernetes Pod Not Starting**
-   - Check pod logs: `kubectl logs -l app=filament-inventory-tracker`
-   - Verify PVC is bound: `kubectl get pvc`
-
-### Logs
-
-View application logs:
 ```bash
-# Docker
-docker logs filament-inventory-tracker
-
-# Kubernetes
-kubectl logs -l app=filament-inventory-tracker -f
+docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t filament-tracker:local \
+  .
 ```
 
 ## Contributing
@@ -226,16 +163,11 @@ kubectl logs -l app=filament-inventory-tracker -f
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Test thoroughly
+4. Test locally
 5. Submit a pull request
+
+The GitHub workflow will automatically build and test your changes.
 
 ## License
 
 MIT License - see LICENSE file for details.
-
-## Support
-
-For issues and questions:
-- Check the troubleshooting section
-- Review application logs
-- Create an issue in the repository
