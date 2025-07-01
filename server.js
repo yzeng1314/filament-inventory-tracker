@@ -280,6 +280,56 @@ app.post('/api/custom-colors', (req, res) => {
   });
 });
 
+// Update custom brand
+app.put('/api/custom-brands/:name', (req, res) => {
+  const { name } = req.params;
+  const { newName } = req.body;
+  
+  if (!newName) {
+    return res.status(400).json({ error: 'New brand name is required' });
+  }
+  
+  const oldName = decodeURIComponent(name);
+  
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    
+    // Update custom brand
+    db.run('UPDATE custom_brands SET name = ? WHERE name = ?', [newName, oldName], function(err) {
+      if (err) {
+        db.run('ROLLBACK');
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        db.run('ROLLBACK');
+        res.status(404).json({ error: 'Custom brand not found' });
+        return;
+      }
+      
+      // Update all filaments using this brand
+      db.run('UPDATE filaments SET brand = ?, updated_at = CURRENT_TIMESTAMP WHERE brand = ?', [newName, oldName], function(err) {
+        if (err) {
+          db.run('ROLLBACK');
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        
+        db.run('COMMIT', (err) => {
+          if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+          }
+          res.json({ 
+            message: 'Custom brand updated successfully',
+            filamentsUpdated: this.changes
+          });
+        });
+      });
+    });
+  });
+});
+
 // Delete custom brand
 app.delete('/api/custom-brands/:name', (req, res) => {
   const { name } = req.params;
@@ -294,6 +344,56 @@ app.delete('/api/custom-brands/:name', (req, res) => {
       return;
     }
     res.json({ message: 'Custom brand deleted successfully' });
+  });
+});
+
+// Update custom color
+app.put('/api/custom-colors/:name', (req, res) => {
+  const { name } = req.params;
+  const { newName, newHexCode } = req.body;
+  
+  if (!newName || !newHexCode) {
+    return res.status(400).json({ error: 'New color name and hex code are required' });
+  }
+  
+  const oldName = decodeURIComponent(name);
+  
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    
+    // Update custom color
+    db.run('UPDATE custom_colors SET name = ?, hex_code = ? WHERE name = ?', [newName, newHexCode, oldName], function(err) {
+      if (err) {
+        db.run('ROLLBACK');
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        db.run('ROLLBACK');
+        res.status(404).json({ error: 'Custom color not found' });
+        return;
+      }
+      
+      // Update all filaments using this color
+      db.run('UPDATE filaments SET color = ?, updated_at = CURRENT_TIMESTAMP WHERE color = ?', [newName, oldName], function(err) {
+        if (err) {
+          db.run('ROLLBACK');
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        
+        db.run('COMMIT', (err) => {
+          if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+          }
+          res.json({ 
+            message: 'Custom color updated successfully',
+            filamentsUpdated: this.changes
+          });
+        });
+      });
+    });
   });
 });
 
@@ -341,6 +441,56 @@ app.post('/api/custom-types', (req, res) => {
       return;
     }
     res.json({ id: this.lastID, name, message: 'Custom type added successfully' });
+  });
+});
+
+// Update custom type
+app.put('/api/custom-types/:name', (req, res) => {
+  const { name } = req.params;
+  const { newName } = req.body;
+  
+  if (!newName) {
+    return res.status(400).json({ error: 'New type name is required' });
+  }
+  
+  const oldName = decodeURIComponent(name);
+  
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    
+    // Update custom type
+    db.run('UPDATE custom_types SET name = ? WHERE name = ?', [newName, oldName], function(err) {
+      if (err) {
+        db.run('ROLLBACK');
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      if (this.changes === 0) {
+        db.run('ROLLBACK');
+        res.status(404).json({ error: 'Custom type not found' });
+        return;
+      }
+      
+      // Update all filaments using this type
+      db.run('UPDATE filaments SET type = ?, updated_at = CURRENT_TIMESTAMP WHERE type = ?', [newName, oldName], function(err) {
+        if (err) {
+          db.run('ROLLBACK');
+          res.status(500).json({ error: err.message });
+          return;
+        }
+        
+        db.run('COMMIT', (err) => {
+          if (err) {
+            res.status(500).json({ error: err.message });
+            return;
+          }
+          res.json({ 
+            message: 'Custom type updated successfully',
+            filamentsUpdated: this.changes
+          });
+        });
+      });
+    });
   });
 });
 

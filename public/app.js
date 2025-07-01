@@ -620,9 +620,6 @@ function updateColorDropdown(customColors) {
         option.innerHTML = `
             <span class="color-indicator" style="background-color: ${color.hex_code}; ${color.hex_code === '#ffffff' ? 'border-color: #999;' : ''}"></span>
             <span>★ ${color.name}</span>
-            <button class="btn btn-danger btn-small edit-custom-color" onclick="editCustomColor('${color.name}', '${color.hex_code}')" title="Edit Color" style="margin-left: auto; padding: 2px 6px;">
-                <i class="fas fa-edit"></i>
-            </button>
         `;
         colorOptions.insertBefore(option, customOption);
     });
@@ -822,32 +819,57 @@ async function editFilament(id) {
         const colorOption = colorOptions.querySelector(`[data-value="${filament.color}"]`);
         if (colorOption) {
             // Color exists in dropdown - select it
-            const colorIndicator = colorOption.querySelector('.color-indicator').cloneNode(true);
-            const text = colorOption.querySelector('span:last-child').textContent;
+            const colorIndicator = colorOption.querySelector('.color-indicator');
+            const textSpan = colorOption.querySelector('span:last-child');
+            const text = textSpan ? textSpan.textContent : colorOption.textContent.replace('★', '').trim();
             
             colorSelected.querySelector('.selected-text').innerHTML = '';
-            colorSelected.querySelector('.selected-text').appendChild(colorIndicator);
+            if (colorIndicator) {
+                const clonedIndicator = colorIndicator.cloneNode(true);
+                colorSelected.querySelector('.selected-text').appendChild(clonedIndicator);
+            }
             colorSelected.querySelector('.selected-text').appendChild(document.createTextNode(' ' + text));
             hiddenColorInput.value = filament.color;
-            customColorContainer.style.display = 'none';
+            
+            if (customColorContainer) {
+                customColorContainer.style.display = 'none';
+                const customColorName = document.getElementById('customColorName');
+                if (customColorName) {
+                    customColorName.required = false;
+                }
+            }
             
             // Update selected state
             colorOptions.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
             colorOption.classList.add('selected');
         } else {
-            // Color doesn't exist - use custom
-            colorSelected.querySelector('.selected-text').textContent = 'Custom Color';
-            hiddenColorInput.value = '';
-            customColorContainer.style.display = 'block';
-            document.getElementById('customColorName').value = filament.color;
-            document.getElementById('customColorName').required = true;
+            // Color doesn't exist in predefined options - it's a custom color
+            // Set the color value directly and show it as selected
+            hiddenColorInput.value = filament.color;
             
             // Try to find the color in custom colors cache to get hex code
             const customColor = customColorsCache.find(c => c.name.toLowerCase() === filament.color.toLowerCase());
             if (customColor) {
-                document.getElementById('colorPicker').value = customColor.hex_code;
-                document.getElementById('colorHex').value = customColor.hex_code;
+                // It's a known custom color - display it properly
+                colorSelected.querySelector('.selected-text').innerHTML = `
+                    <span class="color-indicator" style="background-color: ${customColor.hex_code}; ${customColor.hex_code === '#ffffff' ? 'border-color: #999;' : ''}"></span>
+                    ★ ${filament.color}
+                `;
+            } else {
+                // Unknown color - just display the name
+                colorSelected.querySelector('.selected-text').textContent = filament.color;
             }
+            
+            if (customColorContainer) {
+                customColorContainer.style.display = 'none';
+                const customColorName = document.getElementById('customColorName');
+                if (customColorName) {
+                    customColorName.required = false;
+                }
+            }
+            
+            // Clear selected state from all options
+            colorOptions.querySelectorAll('.dropdown-option').forEach(opt => opt.classList.remove('selected'));
         }
         
         document.getElementById('spoolType').value = filament.spool_type;
@@ -1089,9 +1111,14 @@ async function loadCustomManagementData() {
         brandsList.innerHTML = customBrands.map(brand => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
                 <span>★ ${escapeHtml(brand.name)}</span>
-                <button class="btn btn-danger btn-small" onclick="deleteCustomBrand('${brand.name}')" title="Delete Brand">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-secondary btn-small" onclick="editCustomBrand('${brand.name}')" title="Edit Brand">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="deleteCustomBrand('${brand.name}')" title="Delete Brand">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `).join('') || '<p style="color: #666; font-style: italic;">No custom brands</p>';
         
@@ -1100,9 +1127,14 @@ async function loadCustomManagementData() {
         typesList.innerHTML = customTypes.map(type => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
                 <span>★ ${escapeHtml(type.name)}</span>
-                <button class="btn btn-danger btn-small" onclick="deleteCustomType('${type.name}')" title="Delete Type">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-secondary btn-small" onclick="editCustomType('${type.name}')" title="Edit Type">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="deleteCustomType('${type.name}')" title="Delete Type">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `).join('') || '<p style="color: #666; font-style: italic;">No custom types</p>';
         
@@ -1114,9 +1146,14 @@ async function loadCustomManagementData() {
                     <span class="color-indicator" style="background-color: ${color.hex_code}; ${color.hex_code === '#ffffff' ? 'border-color: #999;' : ''} width: 16px; height: 16px;"></span>
                     <span>★ ${escapeHtml(color.name)}</span>
                 </div>
-                <button class="btn btn-danger btn-small" onclick="deleteCustomColor('${color.name}')" title="Delete Color">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <div style="display: flex; gap: 5px;">
+                    <button class="btn btn-secondary btn-small" onclick="editCustomColorInPanel('${color.name}', '${color.hex_code}')" title="Edit Color">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="deleteCustomColor('${color.name}')" title="Delete Color">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `).join('') || '<p style="color: #666; font-style: italic;">No custom colors</p>';
         
@@ -1265,6 +1302,160 @@ async function deleteCustomType(typeName) {
     }
 }
 
+// Show edit brand modal
+function editCustomBrand(brandName) {
+    showEditModal('brand', brandName, '', '');
+}
+
+// Show edit type modal
+function editCustomType(typeName) {
+    showEditModal('type', typeName, '', '');
+}
+
+// Show edit color modal
+function editCustomColorInPanel(colorName, hexCode) {
+    showEditModal('color', colorName, hexCode, '');
+}
+
+// Generic edit modal function
+function showEditModal(itemType, currentName, currentHex = '', currentExtra = '') {
+    const modalHTML = `
+        <div class="modal" id="editCustomModal">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>Edit Custom ${itemType.charAt(0).toUpperCase() + itemType.slice(1)}</h2>
+                    <button class="close-btn" onclick="closeEditModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCustomForm">
+                        <div class="form-group">
+                            <label for="editItemName">${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Name:</label>
+                            <input type="text" id="editItemName" value="${escapeHtml(currentName)}" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        ${itemType === 'color' ? `
+                            <div class="form-group">
+                                <label for="editItemHex">Color:</label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="color" id="editItemColorPicker" value="${currentHex}" style="width: 50px; height: 40px; border: none; border-radius: 4px; cursor: pointer;">
+                                    <input type="text" id="editItemHex" value="${currentHex}" placeholder="#FF0000" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                        ` : ''}
+                    </form>
+                </div>
+                <div class="form-actions" style="display: flex; gap: 10px; justify-content: flex-end; padding: 15px; border-top: 1px solid #eee;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEditedItem('${itemType}', '${escapeHtml(currentName)}')">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('editCustomModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add event listeners for color picker sync (if color type)
+    if (itemType === 'color') {
+        const colorPicker = document.getElementById('editItemColorPicker');
+        const colorHex = document.getElementById('editItemHex');
+        
+        colorPicker.addEventListener('input', function() {
+            colorHex.value = this.value.toUpperCase();
+        });
+        
+        colorHex.addEventListener('input', function() {
+            const hex = this.value;
+            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+                colorPicker.value = hex;
+            }
+        });
+    }
+    
+    // Show modal
+    document.getElementById('editCustomModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus on name input
+    document.getElementById('editItemName').focus();
+    document.getElementById('editItemName').select();
+}
+
+// Close edit modal
+function closeEditModal() {
+    const modal = document.getElementById('editCustomModal');
+    if (modal) {
+        modal.classList.remove('show');
+        document.body.style.overflow = '';
+        setTimeout(() => modal.remove(), 300);
+    }
+}
+
+// Save edited item
+async function saveEditedItem(itemType, originalName) {
+    const newName = document.getElementById('editItemName').value.trim();
+    
+    if (!newName) {
+        showToast(`Please enter a ${itemType} name`, 'error');
+        return;
+    }
+    
+    let requestBody = { newName };
+    
+    // Handle color-specific fields
+    if (itemType === 'color') {
+        const newHex = document.getElementById('editItemHex').value;
+        if (!newHex || !/^#[0-9A-Fa-f]{6}$/.test(newHex)) {
+            showToast('Please enter a valid hex color code (e.g., #FF0000)', 'error');
+            return;
+        }
+        requestBody.newHexCode = newHex;
+        
+        // Check if no changes were made
+        const originalHex = document.getElementById('editItemColorPicker').defaultValue;
+        if (newName === originalName && newHex === originalHex) {
+            closeEditModal();
+            return;
+        }
+    } else {
+        // Check if no changes were made for brand/type
+        if (newName === originalName) {
+            closeEditModal();
+            return;
+        }
+    }
+    
+    try {
+        const endpoint = itemType === 'brand' ? 'custom-brands' : 
+                        itemType === 'type' ? 'custom-types' : 'custom-colors';
+        
+        const result = await apiCall(`/${endpoint}/${encodeURIComponent(originalName)}`, {
+            method: 'PUT',
+            body: JSON.stringify(requestBody)
+        });
+        
+        showToast(`Custom ${itemType} updated successfully! ${result.filamentsUpdated} filaments updated.`, 'success');
+        closeEditModal();
+        
+        // Refresh all data and UI components
+        await loadCustomManagementData();
+        await loadCustomBrandsAndColors(); // Refresh dropdowns and cache
+        await loadFilaments(); // Refresh filament list to show updated data
+    } catch (error) {
+        console.error(`Failed to update custom ${itemType}:`, error);
+        showToast(`Failed to update custom ${itemType}`, 'error');
+    }
+}
+
 // Export functions for global access
 window.showAddModal = showAddModal;
 window.closeModal = closeModal;
@@ -1272,6 +1463,12 @@ window.editFilament = editFilament;
 window.showDeleteModal = showDeleteModal;
 window.closeDeleteModal = closeDeleteModal;
 window.editCustomColor = editCustomColor;
+window.editCustomBrand = editCustomBrand;
+window.editCustomType = editCustomType;
+window.editCustomColorInPanel = editCustomColorInPanel;
+window.showEditModal = showEditModal;
+window.closeEditModal = closeEditModal;
+window.saveEditedItem = saveEditedItem;
 window.showManageCustomsModal = showManageCustomsModal;
 window.closeManageCustomsModal = closeManageCustomsModal;
 window.addCustomBrand = addCustomBrand;
