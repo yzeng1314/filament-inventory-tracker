@@ -135,184 +135,186 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="filamentForm">
-                <input type="hidden" id="filamentId">
-                
-                <div class="form-group">
-                    <label for="brand">Brand *</label>
-                    <select id="brand" required>
-                        <option value="">Select brand</option>
-                        <option value="Bambu Lab" selected>Bambu Lab</option>
-                        <option value="Hatchbox">Hatchbox</option>
-                        <option value="Overture">Overture</option>
-                        <option value="SUNLU">SUNLU</option>
-                        <option value="eSUN">eSUN</option>
-                        <option value="PETG">PETG</option>
-                        <option value="Polymaker">Polymaker</option>
-                        <option value="Prusament">Prusament</option>
-                        <option value="ELEGOO">ELEGOO</option>
-                        <option value="ANYCUBIC">ANYCUBIC</option>
-                        <option value="Creality">Creality</option>
-                        <option value="Inland">Inland</option>
-                        <option value="Amazon Basics">Amazon Basics</option>
-                        <option value="Tianse">Tianse</option>
-                        <option value="GEEETECH">GEEETECH</option>
-                    </select>
-                </div>
+            <div class="modal-body">
+                <form id="filamentForm">
+                    <input type="hidden" id="filamentId">
+                    
+                    <div class="form-group">
+                        <label for="brand">Brand *</label>
+                        <select id="brand" required>
+                            <option value="">Select brand</option>
+                            <option value="Bambu Lab" selected>Bambu Lab</option>
+                            <option value="Hatchbox">Hatchbox</option>
+                            <option value="Overture">Overture</option>
+                            <option value="SUNLU">SUNLU</option>
+                            <option value="eSUN">eSUN</option>
+                            <option value="PETG">PETG</option>
+                            <option value="Polymaker">Polymaker</option>
+                            <option value="Prusament">Prusament</option>
+                            <option value="ELEGOO">ELEGOO</option>
+                            <option value="ANYCUBIC">ANYCUBIC</option>
+                            <option value="Creality">Creality</option>
+                            <option value="Inland">Inland</option>
+                            <option value="Amazon Basics">Amazon Basics</option>
+                            <option value="Tianse">Tianse</option>
+                            <option value="GEEETECH">GEEETECH</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="type">Type *</label>
-                    <select id="type" required>
-                        <option value="">Select filament type</option>
-                        <option value="PLA" selected>PLA</option>
-                        <option value="ABS">ABS</option>
-                        <option value="PETG">PETG</option>
-                        <option value="TPU">TPU</option>
-                        <option value="ASA">ASA</option>
-                        <option value="PC">Polycarbonate (PC)</option>
-                        <option value="Nylon">Nylon</option>
-                        <option value="Wood">Wood Fill</option>
-                        <option value="Metal">Metal Fill</option>
-                        <option value="Carbon Fiber">Carbon Fiber</option>
-                        <option value="PETG-CF">PETG Carbon Fiber</option>
-                        <option value="PLA+">PLA+</option>
-                        <option value="HIPS">HIPS</option>
-                        <option value="PVA">PVA (Dissolvable)</option>
-                        <option value="PVOH">PVOH</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="type">Type *</label>
+                        <select id="type" required>
+                            <option value="">Select filament type</option>
+                            <option value="PLA" selected>PLA</option>
+                            <option value="ABS">ABS</option>
+                            <option value="PETG">PETG</option>
+                            <option value="TPU">TPU</option>
+                            <option value="ASA">ASA</option>
+                            <option value="PC">Polycarbonate (PC)</option>
+                            <option value="Nylon">Nylon</option>
+                            <option value="Wood">Wood Fill</option>
+                            <option value="Metal">Metal Fill</option>
+                            <option value="Carbon Fiber">Carbon Fiber</option>
+                            <option value="PETG-CF">PETG Carbon Fiber</option>
+                            <option value="PLA+">PLA+</option>
+                            <option value="HIPS">HIPS</option>
+                            <option value="PVA">PVA (Dissolvable)</option>
+                            <option value="PVOH">PVOH</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="color">Color *</label>
-                    <div class="dropdown-container">
-                        <div class="custom-dropdown" id="colorDropdown">
-                            <div class="dropdown-selected" id="colorSelected">
-                                <span class="selected-text">Select color</span>
-                                <i class="dropdown-arrow">▼</i>
+                    <div class="form-group">
+                        <label for="color">Color *</label>
+                        <div class="dropdown-container">
+                            <div class="custom-dropdown" id="colorDropdown">
+                                <div class="dropdown-selected" id="colorSelected">
+                                    <span class="selected-text">Select color</span>
+                                    <i class="dropdown-arrow">▼</i>
+                                </div>
+                                <div class="dropdown-options" id="colorOptions">
+                                    <div class="dropdown-option" data-value="Black" data-color="#000000">
+                                        <span class="color-indicator" style="background-color: #000000;"></span>
+                                        <span>Black</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="White" data-color="#ffffff">
+                                        <span class="color-indicator" style="background-color: #ffffff; border-color: #999;"></span>
+                                        <span>White</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Red" data-color="#ff0000">
+                                        <span class="color-indicator" style="background-color: #ff0000;"></span>
+                                        <span>Red</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Blue" data-color="#0000ff">
+                                        <span class="color-indicator" style="background-color: #0000ff;"></span>
+                                        <span>Blue</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Green" data-color="#008000">
+                                        <span class="color-indicator" style="background-color: #008000;"></span>
+                                        <span>Green</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Yellow" data-color="#ffff00">
+                                        <span class="color-indicator" style="background-color: #ffff00;"></span>
+                                        <span>Yellow</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Orange" data-color="#ffa500">
+                                        <span class="color-indicator" style="background-color: #ffa500;"></span>
+                                        <span>Orange</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Purple" data-color="#800080">
+                                        <span class="color-indicator" style="background-color: #800080;"></span>
+                                        <span>Purple</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Pink" data-color="#ffc0cb">
+                                        <span class="color-indicator" style="background-color: #ffc0cb;"></span>
+                                        <span>Pink</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Gray" data-color="#808080">
+                                        <span class="color-indicator" style="background-color: #808080;"></span>
+                                        <span>Gray</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Brown" data-color="#a52a2a">
+                                        <span class="color-indicator" style="background-color: #a52a2a;"></span>
+                                        <span>Brown</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Silver" data-color="#c0c0c0">
+                                        <span class="color-indicator" style="background-color: #c0c0c0;"></span>
+                                        <span>Silver</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Gold" data-color="#ffd700">
+                                        <span class="color-indicator" style="background-color: #ffd700;"></span>
+                                        <span>Gold</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Transparent" data-color="rgba(255,255,255,0.3)">
+                                        <span class="color-indicator" style="background-color: rgba(255,255,255,0.3); border-color: #999;"></span>
+                                        <span>Transparent</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Clear" data-color="rgba(255,255,255,0.3)">
+                                        <span class="color-indicator" style="background-color: rgba(255,255,255,0.3); border-color: #999;"></span>
+                                        <span>Clear</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Natural" data-color="#f5f5dc">
+                                        <span class="color-indicator" style="background-color: #f5f5dc;"></span>
+                                        <span>Natural</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Glow in Dark" data-color="#90ee90">
+                                        <span class="color-indicator" style="background-color: #90ee90;"></span>
+                                        <span>Glow in Dark</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Wood" data-color="#deb887">
+                                        <span class="color-indicator" style="background-color: #deb887;"></span>
+                                        <span>Wood</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Marble" data-color="#f0f8ff">
+                                        <span class="color-indicator" style="background-color: #f0f8ff;"></span>
+                                        <span>Marble</span>
+                                    </div>
+                                    <div class="dropdown-option" data-value="Carbon Fiber" data-color="#36454f">
+                                        <span class="color-indicator" style="background-color: #36454f;"></span>
+                                        <span>Carbon Fiber</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="dropdown-options" id="colorOptions">
-                                <div class="dropdown-option" data-value="Black" data-color="#000000">
-                                    <span class="color-indicator" style="background-color: #000000;"></span>
-                                    <span>Black</span>
-                                </div>
-                                <div class="dropdown-option" data-value="White" data-color="#ffffff">
-                                    <span class="color-indicator" style="background-color: #ffffff; border-color: #999;"></span>
-                                    <span>White</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Red" data-color="#ff0000">
-                                    <span class="color-indicator" style="background-color: #ff0000;"></span>
-                                    <span>Red</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Blue" data-color="#0000ff">
-                                    <span class="color-indicator" style="background-color: #0000ff;"></span>
-                                    <span>Blue</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Green" data-color="#008000">
-                                    <span class="color-indicator" style="background-color: #008000;"></span>
-                                    <span>Green</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Yellow" data-color="#ffff00">
-                                    <span class="color-indicator" style="background-color: #ffff00;"></span>
-                                    <span>Yellow</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Orange" data-color="#ffa500">
-                                    <span class="color-indicator" style="background-color: #ffa500;"></span>
-                                    <span>Orange</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Purple" data-color="#800080">
-                                    <span class="color-indicator" style="background-color: #800080;"></span>
-                                    <span>Purple</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Pink" data-color="#ffc0cb">
-                                    <span class="color-indicator" style="background-color: #ffc0cb;"></span>
-                                    <span>Pink</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Gray" data-color="#808080">
-                                    <span class="color-indicator" style="background-color: #808080;"></span>
-                                    <span>Gray</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Brown" data-color="#a52a2a">
-                                    <span class="color-indicator" style="background-color: #a52a2a;"></span>
-                                    <span>Brown</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Silver" data-color="#c0c0c0">
-                                    <span class="color-indicator" style="background-color: #c0c0c0;"></span>
-                                    <span>Silver</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Gold" data-color="#ffd700">
-                                    <span class="color-indicator" style="background-color: #ffd700;"></span>
-                                    <span>Gold</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Transparent" data-color="rgba(255,255,255,0.3)">
-                                    <span class="color-indicator" style="background-color: rgba(255,255,255,0.3); border-color: #999;"></span>
-                                    <span>Transparent</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Clear" data-color="rgba(255,255,255,0.3)">
-                                    <span class="color-indicator" style="background-color: rgba(255,255,255,0.3); border-color: #999;"></span>
-                                    <span>Clear</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Natural" data-color="#f5f5dc">
-                                    <span class="color-indicator" style="background-color: #f5f5dc;"></span>
-                                    <span>Natural</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Glow in Dark" data-color="#90ee90">
-                                    <span class="color-indicator" style="background-color: #90ee90;"></span>
-                                    <span>Glow in Dark</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Wood" data-color="#deb887">
-                                    <span class="color-indicator" style="background-color: #deb887;"></span>
-                                    <span>Wood</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Marble" data-color="#f0f8ff">
-                                    <span class="color-indicator" style="background-color: #f0f8ff;"></span>
-                                    <span>Marble</span>
-                                </div>
-                                <div class="dropdown-option" data-value="Carbon Fiber" data-color="#36454f">
-                                    <span class="color-indicator" style="background-color: #36454f;"></span>
-                                    <span>Carbon Fiber</span>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="hidden" id="color" name="color" required>
-                        <div id="customColorContainer" style="display: none;">
-                            <input type="text" id="customColorName" class="custom-input" placeholder="Enter custom color name">
-                            <div class="color-picker-container">
-                                <label for="colorPicker">Choose Color:</label>
-                                <div class="color-input-group">
-                                    <input type="color" id="colorPicker" value="#ff0000">
-                                    <input type="text" id="colorHex" placeholder="#FF0000" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+                            <input type="hidden" id="color" name="color" required>
+                            <div id="customColorContainer" style="display: none;">
+                                <input type="text" id="customColorName" class="custom-input" placeholder="Enter custom color name">
+                                <div class="color-picker-container">
+                                    <label for="colorPicker">Choose Color:</label>
+                                    <div class="color-input-group">
+                                        <input type="color" id="colorPicker" value="#ff0000">
+                                        <input type="text" id="colorHex" placeholder="#FF0000" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="spoolType">Spool Type *</label>
-                    <select id="spoolType" required>
-                        <option value="">Select spool type</option>
-                        <option value="with_spool">With Spool</option>
-                        <option value="refill">Refill Only</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="spoolType">Spool Type *</label>
+                        <select id="spoolType" required>
+                            <option value="">Select spool type</option>
+                            <option value="with_spool">With Spool</option>
+                            <option value="refill">Refill Only</option>
+                        </select>
+                    </div>
 
-                <div class="form-group">
-                    <label for="weightRemaining">Weight Remaining (grams)</label>
-                    <input type="number" id="weightRemaining" min="0" max="10000" step="1" value="1000" required>
-                </div>
+                    <div class="form-group">
+                        <label for="weightRemaining">Weight Remaining (grams)</label>
+                        <input type="number" id="weightRemaining" min="0" max="10000" step="1" value="1000" required>
+                    </div>
 
-                <div class="form-group">
-                    <label for="purchaseDate">Add Date</label>
-                    <input type="date" id="purchaseDate" name="purchaseDate">
-                </div>
+                    <div class="form-group">
+                        <label for="purchaseDate">Add Date</label>
+                        <input type="date" id="purchaseDate" name="purchaseDate">
+                    </div>
 
-                <div class="form-group">
-                    <label for="notes">Notes</label>
-                    <textarea id="notes" rows="3" placeholder="Optional notes about this filament..."></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" rows="3" placeholder="Optional notes about this filament..."></textarea>
+                    </div>
 
-            </form>
+                </form>
+            </div>
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary" form="filamentForm">Save Filament</button>
