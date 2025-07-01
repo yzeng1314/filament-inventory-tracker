@@ -1143,7 +1143,7 @@ async function loadCustomManagementData() {
         colorsList.innerHTML = customColors.map(color => `
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="color-indicator" style="background-color: ${color.hex_code}; ${color.hex_code === '#ffffff' ? 'border-color: #999;' : ''} width: 16px; height: 16px;"></span>
+                    <span class="color-indicator" style="background-color: ${color.hex_code}; ${color.hex_code === '#ffffff' ? 'border-color: #999;' : ''}"></span>
                     <span>★ ${escapeHtml(color.name)}</span>
                 </div>
                 <div style="display: flex; gap: 5px;">

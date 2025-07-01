@@ -241,8 +241,8 @@ body {
 
 .color-indicator {
     display: inline-block;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid #ddd;
     margin-left: 8px;
@@ -607,8 +607,8 @@ select::-ms-expand {
 /* Enhanced color indicators in cards */
 .color-indicator {
     display: inline-block;
-    width: 20px;
-    height: 20px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid #ddd;
     margin-left: 8px;
