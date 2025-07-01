@@ -155,7 +155,23 @@ function renderFilaments(filamentsToRender) {
 function createFilamentCard(filament) {
     const weightPercentage = Math.min((filament.weight_remaining / 1000) * 100, 100);
     const colorStyle = getColorStyleSync(filament.color);
-    const purchaseDate = filament.purchase_date ? new Date(filament.purchase_date).toLocaleDateString() : 'Not specified';
+    
+    // Fix date display issue - parse date correctly to avoid timezone offset
+    let purchaseDate = 'Not specified';
+    if (filament.purchase_date) {
+        // Split the date string and create date with local timezone
+        const dateParts = filament.purchase_date.split('-');
+        if (dateParts.length === 3) {
+            const year = parseInt(dateParts[0]);
+            const month = parseInt(dateParts[1]) - 1; // Month is 0-indexed
+            const day = parseInt(dateParts[2]);
+            const localDate = new Date(year, month, day);
+            purchaseDate = localDate.toLocaleDateString();
+        } else {
+            // Fallback to original method if date format is unexpected
+            purchaseDate = new Date(filament.purchase_date).toLocaleDateString();
+        }
+    }
     
     return `
         <div class="filament-card">
