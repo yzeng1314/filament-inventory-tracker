@@ -101,23 +101,39 @@
             </div>
         </div>
 
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-number" id="totalFilaments">0</div>
-                <div class="stat-label">Total Filaments</div>
+        <div class="tabs">
+            <button class="tab-link active" onclick="openTab(event, 'inventoryTab')">Current Inventory</button>
+            <button class="tab-link" onclick="openTab(event, 'usedTab')">Used Up Filaments</button>
+        </div>
+
+        <div id="inventoryTab" class="tab-content" style="display: block;">
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalFilaments">0</div>
+                    <div class="stat-label">Total Filaments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalBrands">0</div>
+                    <div class="stat-label">Brands</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalWeight">0g</div>
+                    <div class="stat-label">Total Weight</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalBrands">0</div>
-                <div class="stat-label">Brands</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalWeight">0g</div>
-                <div class="stat-label">Total Weight</div>
+
+            <div class="filament-grid" id="filamentGrid">
+                <!-- Filament cards will be dynamically inserted here -->
             </div>
         </div>
 
-        <div class="filament-grid" id="filamentGrid">
-            <!-- Filament cards will be dynamically inserted here -->
+        <div id="usedTab" class="tab-content" style="display: none;">
+            <div class="stats" id="usedStats">
+                <!-- Used filament stats will be inserted here -->
+            </div>
+            <div class="filament-grid" id="usedFilamentGrid">
+                <!-- Used up filament cards will be dynamically inserted here -->
+            </div>
         </div>
 
         <div class="loading" id="loading">
@@ -326,6 +342,38 @@
             <div class="form-actions">
                 <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                 <button type="submit" class="btn btn-primary" form="filamentForm">Save Filament</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Use Filament Modal -->
+    <div class="modal" id="useFilamentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="useModalTitle">Use Filament</h2>
+                <button class="close-btn" onclick="closeUseModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="useFilamentForm">
+                    <input type="hidden" id="useFilamentId">
+                    <div class="form-group">
+                        <label for="usageType">Update method:</label>
+                        <select id="usageType">
+                            <option value="used">Amount Used (g)</option>
+                            <option value="remaining">Amount Remaining (g)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="usageAmount">Amount (g)</label>
+                        <input type="number" id="usageAmount" min="0" step="1" required>
+                    </div>
+                </form>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeUseModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" form="useFilamentForm">Update Usage</button>
             </div>
         </div>
     </div>

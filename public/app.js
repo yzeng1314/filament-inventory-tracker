@@ -1,7 +1,9 @@
 // Global state
 let filaments = [];
+let usedFilaments = [];
 let currentEditId = null;
 let deleteFilamentId = null;
+let useFilamentId = null;
 let customColorsCache = [];
 let customTypesCache = [];
 let currentFilters = {
@@ -22,8 +24,10 @@ const searchInput = document.getElementById('searchInput');
 const searchBtn = document.getElementById('searchBtn');
 const addFilamentBtn = document.getElementById('addFilamentBtn');
 const filamentModal = document.getElementById('filamentModal');
+const useFilamentModal = document.getElementById('useFilamentModal');
 const deleteModal = document.getElementById('deleteModal');
 const filamentForm = document.getElementById('filamentForm');
+const useFilamentForm = document.getElementById('useFilamentForm');
 const loading = document.getElementById('loading');
 const emptyState = document.getElementById('emptyState');
 const toast = document.getElementById('toast');
@@ -32,6 +36,7 @@ const toast = document.getElementById('toast');
 const totalFilaments = document.getElementById('totalFilaments');
 const totalBrands = document.getElementById('totalBrands');
 const totalWeight = document.getElementById('totalWeight');
+const usedStatsContainer = document.getElementById('usedStats');
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
@@ -42,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load custom colors first, then load filaments to ensure color indicators work properly
     await loadCustomBrandsAndColors();
     loadFilaments();
+    loadUsedFilaments();
 });
 
 // Event listeners
@@ -59,6 +65,7 @@ function setupEventListeners() {
         }
     });
     filamentForm.addEventListener('submit', handleFormSubmit);
+    useFilamentForm.addEventListener('submit', handleUseFormSubmit);
     
     // Filter event listeners
     document.getElementById('filterBtn').addEventListener('click', toggleFiltersPanel);
@@ -75,6 +82,12 @@ function setupEventListeners() {
     deleteModal.addEventListener('click', (e) => {
         if (e.target === deleteModal) {
             closeDeleteModal();
+        }
+    });
+
+    useFilamentModal.addEventListener('click', (e) => {
+        if (e.target === useFilamentModal) {
+            closeUseModal();
         }
     });
     
@@ -111,12 +124,22 @@ async function loadFilaments() {
     try {
         showLoading(true);
         filaments = await apiCall('/filaments');
-        renderFilaments(filaments);
+        renderFilaments(filaments.filter(f => !f.is_archived));
         updateStats();
     } catch (error) {
         console.error('Failed to load filaments:', error);
     } finally {
         showLoading(false);
+    }
+}
+
+async function loadUsedFilaments() {
+    try {
+        usedFilaments = await apiCall('/filaments/used');
+        renderUsedFilaments(usedFilaments);
+        updateUsedStats();
+    } catch (error) {
+        console.error('Failed to load used filaments:', error);
     }
 }
 
@@ -142,20 +165,28 @@ async function handleSearch() {
 
 // Render filaments
 function renderFilaments(filamentsToRender) {
-    if (filamentsToRender.length === 0) {
+    const activeFilaments = filamentsToRender.filter(f => !f.is_archived);
+    if (activeFilaments.length === 0) {
         filamentGrid.style.display = 'none';
         emptyState.style.display = 'block';
-        return;
+    } else {
+        filamentGrid.style.display = 'grid';
+        emptyState.style.display = 'none';
+        filamentGrid.innerHTML = activeFilaments.map(filament => createFilamentCard(filament)).join('');
     }
-    
-    filamentGrid.style.display = 'grid';
-    emptyState.style.display = 'none';
-    
-    filamentGrid.innerHTML = filamentsToRender.map(filament => createFilamentCard(filament)).join('');
+}
+
+function renderUsedFilaments(filamentsToRender) {
+    const usedFilamentGrid = document.getElementById('usedFilamentGrid');
+    if (filamentsToRender.length === 0) {
+        usedFilamentGrid.innerHTML = '<p>No used up filaments yet.</p>';
+    } else {
+        usedFilamentGrid.innerHTML = filamentsToRender.map(filament => createFilamentCard(filament, true)).join('');
+    }
 }
 
 // Create filament card HTML
-function createFilamentCard(filament) {
+function createFilamentCard(filament, isUsed = false) {
     const weightPercentage = Math.min((filament.weight_remaining / 1000) * 100, 100);
     const colorStyle = getColorStyleSync(filament.color);
     
@@ -175,6 +206,9 @@ function createFilamentCard(filament) {
             purchaseDate = new Date(filament.purchase_date).toLocaleDateString();
         }
     }
+
+    const dateLabel = isUsed ? 'Used Up Date' : 'Add Date';
+    const dateValue = isUsed ? new Date(filament.updated_at).toLocaleDateString() : purchaseDate;
     
     return `
         <div class="filament-card">
@@ -184,9 +218,14 @@ function createFilamentCard(filament) {
                     <div class="filament-type">${escapeHtml(filament.type)}</div>
                 </div>
                 <div class="filament-actions">
+                    ${!isUsed ? `
+                    <button class="btn btn-primary btn-small" onclick="showUseModal(${filament.id})" title="Use">
+                        <i class="fas fa-play"></i>
+                    </button>
                     <button class="btn btn-secondary btn-small" onclick="editFilament(${filament.id})" title="Edit">
                         <i class="fas fa-edit"></i>
                     </button>
+                    ` : ''}
                     <button class="btn btn-danger btn-small" onclick="showDeleteModal(${filament.id})" title="Delete">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -210,8 +249,8 @@ function createFilamentCard(filament) {
                     <span class="detail-value">${filament.weight_remaining}g</span>
                 </div>
                 <div class="detail-row">
-                    <span class="detail-label">Add Date:</span>
-                    <span class="detail-value">${purchaseDate}</span>
+                    <span class="detail-label">${dateLabel}:</span>
+                    <span class="detail-value">${dateValue}</span>
                 </div>
                 
                 <div class="weight-bar">
@@ -255,13 +294,40 @@ function getColorStyle(color) {
 
 // Update statistics
 function updateStats(filamentsToCount = filaments) {
-    const total = filamentsToCount.length;
-    const brands = new Set(filamentsToCount.map(f => f.brand.toLowerCase())).size;
-    const weight = filamentsToCount.reduce((sum, f) => sum + (f.weight_remaining || 0), 0);
+    const activeFilaments = filamentsToCount.filter(f => !f.is_archived);
+    const total = activeFilaments.length;
+    const brands = new Set(activeFilaments.map(f => f.brand.toLowerCase())).size;
+    const weight = activeFilaments.reduce((sum, f) => sum + (f.weight_remaining || 0), 0);
     
     totalFilaments.textContent = total;
     totalBrands.textContent = brands;
     totalWeight.textContent = `${weight}g`;
+}
+
+function updateUsedStats() {
+    const totalUsed = usedFilaments.length;
+    let statsHtml = `
+        <div class="stat-card">
+            <div class="stat-number">${totalUsed}</div>
+            <div class="stat-label">Total Used Spools</div>
+        </div>
+    `;
+
+    const statsByType = usedFilaments.reduce((acc, f) => {
+        acc[f.type] = (acc[f.type] || 0) + 1;
+        return acc;
+    }, {});
+
+    for (const type in statsByType) {
+        statsHtml += `
+            <div class="stat-card">
+                <div class="stat-number">${statsByType[type]}</div>
+                <div class="stat-label">${escapeHtml(type)}</div>
+            </div>
+        `;
+    }
+
+    usedStatsContainer.innerHTML = statsHtml;
 }
 
 // Modal functions
@@ -285,6 +351,19 @@ function closeModal() {
     filamentModal.classList.remove('show');
     document.body.style.overflow = '';
     resetForm();
+}
+
+function showUseModal(id) {
+    useFilamentId = id;
+    useFilamentModal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeUseModal() {
+    useFilamentModal.classList.remove('show');
+    document.body.style.overflow = '';
+    useFilamentForm.reset();
+    useFilamentId = null;
 }
 
 function resetForm() {
@@ -457,6 +536,9 @@ document.addEventListener('keydown', (e) => {
         }
         if (deleteModal.classList.contains('show')) {
             closeDeleteModal();
+        }
+        if (useFilamentModal.classList.contains('show')) {
+            closeUseModal();
         }
     }
     
@@ -718,6 +800,32 @@ function setDefaultValues() {
 }
 
 // Handle form submission
+async function handleUseFormSubmit(e) {
+    e.preventDefault();
+    if (!useFilamentId) return;
+
+    const usageType = document.getElementById('usageType').value;
+    const amount = parseFloat(document.getElementById('usageAmount').value);
+
+    if (isNaN(amount) || amount < 0) {
+        showToast('Please enter a valid amount.', 'error');
+        return;
+    }
+
+    try {
+        await apiCall(`/filaments/${useFilamentId}/use`, {
+            method: 'POST',
+            body: JSON.stringify({ usageType, amount })
+        });
+        showToast('Filament usage updated!', 'success');
+        closeUseModal();
+        loadFilaments();
+        loadUsedFilaments();
+    } catch (error) {
+        console.error('Failed to update filament usage:', error);
+    }
+}
+
 async function handleFormSubmit(e) {
     e.preventDefault();
     
@@ -1872,6 +1980,8 @@ function applyFiltersAndSearch() {
 // Export functions for global access
 window.showAddModal = showAddModal;
 window.closeModal = closeModal;
+window.showUseModal = showUseModal;
+window.closeUseModal = closeUseModal;
 window.editFilament = editFilament;
 window.showDeleteModal = showDeleteModal;
 window.closeDeleteModal = closeDeleteModal;
@@ -1898,3 +2008,17 @@ window.confirmCustomDelete = confirmCustomDelete;
 window.toggleFiltersPanel = toggleFiltersPanel;
 window.applyFilters = applyFilters;
 window.clearFilters = clearFilters;
+
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tab-link");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(tabName).style.display = "block";
+    evt.currentTarget.className += " active";
+}

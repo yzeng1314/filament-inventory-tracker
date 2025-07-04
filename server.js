@@ -34,6 +34,7 @@ function initializeDatabase() {
       weight_remaining REAL DEFAULT 1000,
       purchase_date TEXT,
       notes TEXT,
+      is_archived BOOLEAN DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -68,6 +69,24 @@ function initializeDatabase() {
     if (err) {
       console.error('Error creating filaments table:', err.message);
     } else {
+      // Add the is_archived column if it doesn't exist
+      db.all("PRAGMA table_info(filaments)", (err, columns) => {
+        if (err) {
+          console.error("Error getting table info:", err.message);
+          return;
+        }
+        
+        const columnExists = columns.some(col => col.name === 'is_archived');
+        if (!columnExists) {
+          db.run('ALTER TABLE filaments ADD COLUMN is_archived BOOLEAN DEFAULT 0', (err) => {
+            if (err) {
+              console.error('Error adding is_archived column:', err.message);
+            } else {
+              console.log('is_archived column added to filaments table');
+            }
+          });
+        }
+      });
       console.log('Filaments table ready');
     }
   });
@@ -102,7 +121,7 @@ function initializeDatabase() {
 // Get all filaments
 app.get('/api/filaments', (req, res) => {
   const query = `
-    SELECT * FROM filaments 
+    SELECT * FROM filaments WHERE is_archived = 0
     ORDER BY created_at DESC
   `;
   
@@ -114,6 +133,22 @@ app.get('/api/filaments', (req, res) => {
     res.json(rows);
   });
 });
+
+// Get used filaments
+app.get('/api/filaments/used', (req, res) => {
+    const query = `
+      SELECT * FROM filaments WHERE is_archived = 1
+      ORDER BY updated_at DESC
+    `;
+    
+    db.all(query, [], (err, rows) => {
+      if (err) {
+        res.status(500).json({ error: err.message });
+        return;
+      }
+      res.json(rows);
+    });
+  });
 
 // Search filaments
 app.get('/api/filaments/search', (req, res) => {
@@ -201,6 +236,47 @@ app.put('/api/filaments/:id', (req, res) => {
     }
     res.json({ message: 'Filament updated successfully' });
   });
+});
+
+// Use filament
+app.post('/api/filaments/:id/use', (req, res) => {
+    const { id } = req.params;
+    const { usageType, amount } = req.body;
+
+    db.get('SELECT weight_remaining FROM filaments WHERE id = ?', [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ error: 'Filament not found' });
+        }
+
+        let newWeight;
+        if (usageType === 'used') {
+            newWeight = row.weight_remaining - amount;
+        } else {
+            newWeight = amount;
+        }
+
+        if (newWeight < 0) {
+            newWeight = 0;
+        }
+
+        const isArchived = newWeight === 0;
+
+        const query = `
+            UPDATE filaments 
+            SET weight_remaining = ?, is_archived = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        `;
+
+        db.run(query, [newWeight, isArchived, id], function(err) {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.json({ message: 'Filament usage updated successfully' });
+        });
+    });
 });
 
 // Delete filament

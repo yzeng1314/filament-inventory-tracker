@@ -284,6 +284,33 @@ body {
     font-style: italic;
 }
 
+/* Tabs */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    margin-bottom: 20px;
+}
+
+.tab-link {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+    border-bottom: 3px solid transparent;
+}
+
+.tab-link.active {
+    color: white;
+    border-bottom: 3px solid white;
+}
+
+.tab-content {
+    display: none;
+}
+
 /* Modal */
 .modal {
     display: none;
