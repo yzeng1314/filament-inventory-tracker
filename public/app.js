@@ -73,23 +73,23 @@ function setupEventListeners() {
     document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
     
     // Modal close on backdrop click
-    filamentModal.addEventListener('click', (e) => {
-        if (e.target === filamentModal) {
-            closeModal();
-        }
-    });
+    // filamentModal.addEventListener('click', (e) => {
+    //     if (e.target === filamentModal) {
+    //         closeModal();
+    //     }
+    // });
     
-    deleteModal.addEventListener('click', (e) => {
-        if (e.target === deleteModal) {
-            closeDeleteModal();
-        }
-    });
+    // deleteModal.addEventListener('click', (e) => {
+    //     if (e.target === deleteModal) {
+    //         closeDeleteModal();
+    //     }
+    // });
 
-    useFilamentModal.addEventListener('click', (e) => {
-        if (e.target === useFilamentModal) {
-            closeUseModal();
-        }
-    });
+    // useFilamentModal.addEventListener('click', (e) => {
+    //     if (e.target === useFilamentModal) {
+    //         closeUseModal();
+    //     }
+    // });
     
     // Confirm delete button
     document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDelete);
@@ -1252,9 +1252,11 @@ async function loadCustomManagementData() {
         // Render custom brands
         const brandsList = document.getElementById('customBrandsList');
         brandsList.innerHTML = customBrands.map(brand => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
-                <span>★ ${escapeHtml(brand.name)}</span>
-                <div style="display: flex; gap: 5px;">
+            <div class="custom-item-row">
+                <div class="custom-item-name">
+                    <span>★ ${escapeHtml(brand.name)}</span>
+                </div>
+                <div class="custom-item-actions">
                     <button class="btn btn-secondary btn-small" onclick="editCustomBrand('${brand.name}')" title="Edit Brand">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -1268,9 +1270,11 @@ async function loadCustomManagementData() {
         // Render custom types
         const typesList = document.getElementById('customTypesList');
         typesList.innerHTML = customTypes.map(type => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
-                <span>★ ${escapeHtml(type.name)}</span>
-                <div style="display: flex; gap: 5px;">
+            <div class="custom-item-row">
+                <div class="custom-item-name">
+                    <span>★ ${escapeHtml(type.name)}</span>
+                </div>
+                <div class="custom-item-actions">
                     <button class="btn btn-secondary btn-small" onclick="editCustomType('${type.name}')" title="Edit Type">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -1284,12 +1288,12 @@ async function loadCustomManagementData() {
         // Render custom colors
         const colorsList = document.getElementById('customColorsList');
         colorsList.innerHTML = customColors.map(color => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px; border: 1px solid #eee; margin-bottom: 5px; border-radius: 4px;">
-                <div style="display: flex; align-items: center; gap: 8px;">
+            <div class="custom-item-row">
+                <div class="custom-item-name">
                     <span class="color-indicator" style="background-color: ${color.hex_code}; ${color.hex_code === '#ffffff' ? 'border-color: #999;' : ''}"></span>
                     <span>★ ${escapeHtml(color.name)}</span>
                 </div>
-                <div style="display: flex; gap: 5px;">
+                <div class="custom-item-actions">
                     <button class="btn btn-secondary btn-small" onclick="editCustomColorInPanel('${color.name}', '${color.hex_code}')" title="Edit Color">
                         <i class="fas fa-edit"></i>
                     </button>

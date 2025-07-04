@@ -655,6 +655,39 @@ select::-ms-expand {
     flex-shrink: 0;
 }
 
+#customColorsList .color-indicator {
+    width: 20px;
+    height: 20px;
+}
+
+.custom-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid #eee;
+    margin-bottom: 5px;
+    border-radius: 4px;
+}
+
+.custom-item-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+}
+
+.custom-item-name span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.custom-item-actions {
+    display: flex;
+    gap: 5px;
+}
+
 .dropdown-option.selected .color-indicator {
     border-color: white;
 }
